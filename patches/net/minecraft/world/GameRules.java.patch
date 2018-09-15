@@ -1,0 +1,10 @@
+--- a/net/minecraft/world/GameRules.java
++++ b/net/minecraft/world/GameRules.java
+@@ -55,6 +55,7 @@
+     p_209363_0_.put("doLimitedCrafting", new GameRules.ValueDefinition("false", GameRules.ValueType.BOOLEAN_VALUE));
+     p_209363_0_.put("maxCommandChainLength", new GameRules.ValueDefinition("65536", GameRules.ValueType.NUMERICAL_VALUE));
+     p_209363_0_.put("announceAdvancements", new GameRules.ValueDefinition("true", GameRules.ValueType.BOOLEAN_VALUE));
++    p_209363_0_.put("processEntities", new GameRules.ValueDefinition("true", GameRules.ValueType.BOOLEAN_VALUE));
+ });
+     private final TreeMap<String, GameRules.Value> rules = new TreeMap<String, GameRules.Value>();
+ 

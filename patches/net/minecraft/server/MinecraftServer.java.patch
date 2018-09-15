@@ -1,0 +1,22 @@
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -188,9 +188,11 @@
+     private boolean whitelistEnabled;
+     private boolean forceWorldUpgrade;
+     private float tickTime;
++    public static MinecraftServer INSTANCE;
+ 
+     public MinecraftServer(@Nullable File anvilFileIn, Proxy serverProxyIn, DataFixer dataFixerIn, Commands commandManagerIn, YggdrasilAuthenticationService authServiceIn, MinecraftSessionService sessionServiceIn, GameProfileRepository profileRepoIn, PlayerProfileCache profileCacheIn)
+     {
++        INSTANCE = this;
+         this.serverProxy = serverProxyIn;
+         this.commandManager = commandManagerIn;
+         this.authService = authServiceIn;
+@@ -859,6 +861,7 @@
+ 
+                 try
+                 {
++                    if (worldserver.getGameRules().getBoolean("processEntities"))
+                     worldserver.tickEntities();
+                 }
+                 catch (Throwable throwable)

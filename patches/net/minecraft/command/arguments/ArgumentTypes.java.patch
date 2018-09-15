@@ -1,0 +1,12 @@
+--- a/net/minecraft/command/arguments/ArgumentTypes.java
++++ b/net/minecraft/command/arguments/ArgumentTypes.java
+@@ -77,6 +77,9 @@
+     register(new ResourceLocation("minecraft:float_range"), RangeArgument.FloatRange.class, new RangeArgument.FloatRange.Serializer());
+     register(new ResourceLocation("minecraft:item_enchantment"), EnchantmentArgument.class, new ArgumentSerializer(EnchantmentArgument::itemEnchantment));
+     register(new ResourceLocation("minecraft:entity_summon"), EntitySummonArgument.class, new ArgumentSerializer(EntitySummonArgument::entitySummon));
++    
++    register(new ResourceLocation("examplemod:long"), com.example.mod.LongArgumentType.class, new ArgumentSerializer(com.example.mod.LongArgumentType::longArg));
++    register(new ResourceLocation("examplemod:template"), com.example.mod.TemplateArgument.class, new ArgumentSerializer(() -> com.example.mod.TemplateArgument.template(false)));
+ }
+ 
+     @Nullable
