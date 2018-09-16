@@ -31,6 +31,8 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.arguments.BlockPosArgument;
@@ -42,6 +44,7 @@ import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.gen.feature.template.PlacementSettings;
 import net.minecraft.world.gen.feature.template.Template;
@@ -50,10 +53,22 @@ import net.minecraft.world.gen.feature.template.TemplateManager;
 public class StructureCommand
 {
 
+    public static final DynamicCommandExceptionType TEMPLATE_INVALID_EXCEPTION = 
+        new DynamicCommandExceptionType(template -> new TextComponentTranslation("Template %s doesn't exist", template));
+    
     public static void register(CommandDispatcher<CommandSource> dispatcher)
     {
+    	ArgumentBuilder<CommandSource, ?> posArgument = argument("pos", BlockPosArgument.blockPos())
+                .executes(ctx -> loadStructure(ctx.getSource(),
+                        TemplateArgument.getTemplate(ctx, "template"),
+                        BlockPosArgument.getBlockPos(ctx, "pos"),
+                        Mirror.NONE,
+                        Rotation.NONE,
+                        true,
+                        1,
+                        0));
         ArgumentBuilder<CommandSource, ?> load = literal("load")
-                .then(argument("template", TemplateArgument.template(false))
+                .then(argument("template", TemplateArgument.template())
                     .executes(ctx -> loadStructure(ctx.getSource(),
                             TemplateArgument.getTemplate(ctx, "template"),
                             new BlockPos(ctx.getSource().getPos()),
@@ -62,17 +77,9 @@ public class StructureCommand
                             true,
                             1,
                             0))
-                    .then(argument("pos", BlockPosArgument.blockPos())
-                        .executes(ctx -> loadStructure(ctx.getSource(),
-                                TemplateArgument.getTemplate(ctx, "template"),
-                                BlockPosArgument.getBlockPos(ctx, "pos"),
-                                Mirror.NONE,
-                                Rotation.NONE,
-                                true,
-                                1,
-                                0))));
+                    .then(posArgument));
         
-        createMirrorArgument(load, (mirror, builder1) -> {
+        createMirrorArgument(posArgument, (mirror, builder1) -> {
             builder1.executes(ctx -> loadStructure(ctx.getSource(),
                     TemplateArgument.getTemplate(ctx, "template"),
                     BlockPosArgument.getBlockPos(ctx, "pos"),
@@ -121,7 +128,7 @@ public class StructureCommand
         });
         
         ArgumentBuilder<CommandSource, ?> save = literal("save")
-                .then(argument("template", TemplateArgument.template(true))
+                .then(argument("template", TemplateArgument.template())
                     .then(argument("from", BlockPosArgument.blockPos())
                         .then(argument("to", BlockPosArgument.blockPos())
                             .executes(ctx -> saveStructure(ctx.getSource(),
@@ -187,8 +194,13 @@ public class StructureCommand
         builder.then(child);
     }
     
-    private static int loadStructure(CommandSource source, Template template, BlockPos pos, Mirror mirror, Rotation rotation, boolean ignoreEntities, float integrity, long seed)
+    private static int loadStructure(CommandSource source, ResourceLocation templateLocation, BlockPos pos, Mirror mirror, Rotation rotation, boolean ignoreEntities, float integrity, long seed) throws CommandSyntaxException
     {
+    	TemplateManager manager = source.getServer().worlds[0].getStructureTemplateManager();
+    	Template template = manager.getTemplate(templateLocation);
+    	if (template == null)
+    		throw TEMPLATE_INVALID_EXCEPTION.create(templateLocation);
+    	
         PlacementSettings settings = new PlacementSettings().setMirror(mirror).setRotation(rotation).setIgnoreEntities(ignoreEntities).setChunk(null).setReplacedBlock(null).setIgnoreStructureBlock(false);
         if (integrity < 1)
         {
@@ -203,9 +215,10 @@ public class StructureCommand
     }
     
     @SuppressWarnings("unchecked")
-    private static int saveStructure(CommandSource source, Template template, BlockPos from, BlockPos to, boolean ignoreEntities)
+    private static int saveStructure(CommandSource source, ResourceLocation templateLocation, BlockPos from, BlockPos to, boolean ignoreEntities)
     {
-        TemplateManager manager = MinecraftServer.INSTANCE.worlds[0].getStructureTemplateManager();
+        TemplateManager manager = source.getServer().worlds[0].getStructureTemplateManager();
+        Template template = manager.getTemplateDefaulted(templateLocation);
         
         MutableBoundingBox bb = new MutableBoundingBox(from, to);
         BlockPos origin = new BlockPos(bb.minX, bb.minY, bb.minZ);
