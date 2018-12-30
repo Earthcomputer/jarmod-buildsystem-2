@@ -119,7 +119,7 @@ project(':' + settings.modname) {
 
     task runclient(type: JavaExec, dependsOn: [":" + settings.modname + ":downloadAssets", ":" + settings.modname + ":extractNatives"]) {
         doFirst {
-            mkdir 'runclient'
+            mkdir "$rootDir/runclient"
         }
         doFirst {
             copy {
@@ -137,17 +137,17 @@ project(':' + settings.modname) {
                 assetDirectory: file("${gradle.getGradleUserHomeDir()}/caches/forge_gradle/assets/"),
                 nativesDirectory: extractNatives.output
         ]
-        workingDir 'runclient'
+        workingDir "$rootDir/runclient"
     }
 
     task runserver(type: JavaExec) {
         doFirst {
-            mkdir 'runserver'
+            mkdir "$rootDir/runserver"
         }
         classpath sourceSets.main.runtimeClasspath
         main settings.servermain
         args 'nogui'
-        workingDir 'runserver'
+        workingDir "$rootDir/runserver"
     }
 }
 
@@ -481,4 +481,33 @@ task createRelease {
         dependsOn createReleaseClient
     if (settings.pipeline != 'client')
         dependsOn createReleaseServer
+}
+
+//Adds idea tools tab
+project(':tools') {
+    task setupProject {
+        group = 'tools ' + settings.modname
+        description = 'Sets project up from patches, or clean project running it the first time'
+        dependsOn setup
+    }
+    task generatePatches {
+        group = 'tools ' + settings.modname
+        description = 'Convert project to patches for public distribution'
+        dependsOn project(':' + settings.modname).genPatches
+    }
+    task releaseProject {
+        group = 'tools ' + settings.modname
+        description = 'Creates a release from the current project'
+        dependsOn createRelease
+    }
+    task runServer {
+        group = 'tools ' + settings.modname
+        description = 'Runs server'
+        dependsOn project(':' + settings.modname).runserver
+    }
+    task runClient {
+        group = 'tools ' + settings.modname
+        description = 'Runs client'
+        dependsOn project(':' + settings.modname).runclient
+    }
 }
