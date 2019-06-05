@@ -262,8 +262,8 @@ class CheckModifiedHelper {
                 return true
 
             if (entryName.contains('$')) { // Check if outer Class has changed, if yes we need this too
-                String[] split = entryName.split('[$]')
-                return isModified(split[0] + ".class")
+                String parentEntry = entryName.substring(0, entryName.lastIndexOf('$')) + '.class'
+                return changedMap.containsKey(parentEntry) && isModified(parentEntry)
             }
 
             return false
@@ -533,10 +533,8 @@ for (def dist : ['Client', 'Server']) {
         dependsOn ':clean:' + inputTaskName, ':' + settings.modname + ':' + inputTaskName
         
         CheckModifiedHelper check = new CheckModifiedHelper(settings.modname, inputTaskName, inputArchiveName)
-        try {
+        doFirst {
             check.filterUnchanged()
-        } 
-        catch(IOException) { // Can happen on initialization because filterDiist/reobfJar has not been run 
         }
 
         from(zipTree(check.getModdedFilepath())) {
@@ -546,7 +544,7 @@ for (def dist : ['Client', 'Server']) {
                     moddedFile.exclude()
             }
         }
-        
+
         archiveName = "${settings.modname}_${project.version}_${dist}.zip"
         destinationDir = file('build/distributions')
         includeEmptyDirs = false
