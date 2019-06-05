@@ -17,7 +17,8 @@ buildscript {
 }
 
 import com.github.abrarsyed.jastyle.ASFormatter;
-import com.github.abrarsyed.jastyle.OptParser;
+import com.github.abrarsyed.jastyle.OptParser
+import com.google.common.collect.Maps;
 import com.google.gson.GsonBuilder
 import groovy.json.JsonSlurper
 import java.util.zip.*
@@ -200,6 +201,69 @@ class JarFilter {
         }
         zipIn.close()
         zipOut.close()
+    }
+}
+
+class CheckModifiedHelper {
+    Map<String, Boolean> changedMap = Maps.<String, Boolean>newTreeMap()
+    String modname
+    String inputTaskName
+    String inputArchiveName
+
+    String getCleanFilepath()
+    {
+        return 'projects/clean/build/' + inputTaskName + '/' + inputArchiveName
+    }
+
+    String getModdedFilepath()
+    {
+        return 'projects/' + modname + '/build/' + inputTaskName + '/' + inputArchiveName
+    }
+
+    CheckModifiedHelper(String modname, String taskname, String archivname)
+    {
+        this.modname = modname
+        this.inputTaskName = taskname
+        this.inputArchiveName = archivname
+    }
+
+    def filterUnchanged() {
+        def cleanFilename = getCleanFilepath()
+        def moddedFilename = getModdedFilepath()
+
+        def zipIn = new ZipFile(moddedFilename)
+        zipIn.entries().each { moddedFile ->
+            def entryName = moddedFile.toString()
+
+            def vanillaJar = new ZipFile(cleanFilename)
+            def vanillaEntry = vanillaJar.getEntry entryName
+
+            if (vanillaEntry != null) {
+                def moddedJar = new ZipFile(moddedFilename)
+                def moddedEntry = moddedJar.getEntry entryName
+
+                boolean modded = !IOUtils.contentEquals(vanillaJar.getInputStream(vanillaEntry), moddedJar.getInputStream(moddedEntry))
+                changedMap.put(entryName, modded)
+            }
+        }
+        zipIn.close()
+    }
+
+    boolean isModified(String entryName) {
+        if (changedMap.containsKey(entryName)) {
+            boolean changed = changedMap.get(entryName)
+            if (changed)
+                return true
+
+            if (entryName.contains('$')) { // Check if outer Class has changed, if yes we need this too
+                String[] split = entryName.split('[$]')
+                return isModified(split[0] + ".class")
+            }
+
+            return false
+        }
+
+        return true // Propably a new file so include it
     }
 }
 
@@ -453,25 +517,27 @@ for (def dist : ['Client', 'Server']) {
     task('createRelease' + dist, type: Zip) {
         def inputTaskName = settings.pipeline == 'joined' ? 'filterDist' + dist : 'reobfJar'
         def inputArchiveName = settings.pipeline == 'joined' ? 'output.zip' : 'output.jar'
-        from(zipTree('projects/' + settings.modname + '/build/' + inputTaskName + '/' + inputArchiveName)) {
+
+        dependsOn ':clean:' + inputTaskName, ':' + settings.modname + ':' + inputTaskName
+        
+        CheckModifiedHelper check = new CheckModifiedHelper(settings.modname, inputTaskName, inputArchiveName)
+        try {
+            check.filterUnchanged()
+        } 
+        catch(IOException) { // Can happen on initialization because filterDiist/reobfJar has not been run 
+        }
+
+        from(zipTree(check.getModdedFilepath())) {
             eachFile { moddedFile ->
                 def entryName = moddedFile.getRelativePath().toString()
-                def vanillaJar = new ZipFile(file('projects/clean/build/' + inputTaskName + '/' + inputArchiveName))
-                def vanillaEntry = vanillaJar.getEntry entryName
-                if (vanillaEntry != null) {
-                    def moddedJar = new ZipFile(file('projects/' + settings.modname + '/build/' + inputTaskName + '/' + inputArchiveName))
-                    def moddedEntry = moddedJar.getEntry entryName
-                    if (IOUtils.contentEquals(vanillaJar.getInputStream(vanillaEntry), moddedJar.getInputStream(moddedEntry)))
-                        moddedFile.exclude()
-                }
+                if (!check.isModified(entryName))
+                    moddedFile.exclude()
             }
         }
         
         archiveName = "${settings.modname}_${project.version}_${dist}.zip"
         destinationDir = file('build/distributions')
         includeEmptyDirs = false
-        
-        dependsOn ':clean:' + inputTaskName, ':' + settings.modname + ':' + inputTaskName
     }
 }
 
