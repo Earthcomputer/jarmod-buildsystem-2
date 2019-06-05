@@ -1,14 +1,14 @@
 --- a/net/minecraft/command/impl/CloneCommand.java
 +++ b/net/minecraft/command/impl/CloneCommand.java
-@@ -26,6 +26,8 @@
- import net.minecraft.util.text.TextComponentTranslation;
- import net.minecraft.world.WorldServer;
+@@ -25,6 +25,8 @@
+ import net.minecraft.util.text.TranslationTextComponent;
+ import net.minecraft.world.ServerWorld;
  
 +import com.example.mod.FillLimitCommand;
 +
  public class CloneCommand
  {
-     private static final SimpleCommandExceptionType OVERLAP_EXCEPTION = new SimpleCommandExceptionType(new TextComponentTranslation("commands.clone.overlap", new Object[0]));
+     private static final SimpleCommandExceptionType OVERLAP_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent("commands.clone.overlap"));
 @@ -109,9 +111,9 @@
          {
              int i = mutableboundingbox.getXSize() * mutableboundingbox.getYSize() * mutableboundingbox.getZSize();

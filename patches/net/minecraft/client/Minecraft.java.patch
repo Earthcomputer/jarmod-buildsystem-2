@@ -1,0 +1,12 @@
+--- a/net/minecraft/client/Minecraft.java
++++ b/net/minecraft/client/Minecraft.java
+@@ -462,7 +462,8 @@
+         }
+ 
+         this.field_195557_T = new VirtualScreen(this);
+-        this.field_195558_d = this.field_195557_T.func_217626_a(screensize, this.field_71474_y.fullscreenResolution, "Minecraft " + SharedConstants.getVersion().getName());
++        // example client-side-only modification
++        this.field_195558_d = this.field_195557_T.func_217626_a(screensize, this.field_71474_y.fullscreenResolution, "ExampleMod " + SharedConstants.getVersion().getName());
+         this.func_213228_a(true);
+ 
+         try

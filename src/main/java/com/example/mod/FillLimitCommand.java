@@ -7,7 +7,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 
 import net.minecraft.command.CommandSource;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 
 public class FillLimitCommand {
 
@@ -22,13 +22,13 @@ public class FillLimitCommand {
     }
     
     private static int getFillLimit(CommandSource source) {
-        source.sendFeedback(new TextComponentString("Fill limit: " + fillLimit), false);
+        source.sendFeedback(new StringTextComponent("Fill limit: " + fillLimit), false);
         return fillLimit;
     }
     
     private static int setFillLimit(CommandSource source, int newLimit) {
         fillLimit = newLimit;
-        source.sendFeedback(new TextComponentString("Fill limit updated to " + newLimit), true);
+        source.sendFeedback(new StringTextComponent("Fill limit updated to " + newLimit), true);
         return 0;
     }
     

@@ -57,6 +57,10 @@ project(':clean') {
     apply plugin: 'net.minecraftforge.gradle.forgedev.patcher'
     repositories {
         mavenCentral()
+        maven { url = 'http://files.minecraftforge.net/maven' }
+    }
+    dependencies {
+        compileOnly('net.minecraftforge:forgespi:0.13.0') { transitive = false }
     }
     patcher {
         parent = project(':mcp')
@@ -91,8 +95,9 @@ project(':' + settings.modname) {
         }
     }
     repositories {
-        mavenLocal()
+        //mavenLocal()
         mavenCentral()
+        maven { url = 'http://files.minecraftforge.net/maven' }
     }
     patcher {
         parent = project(':clean')
@@ -115,6 +120,7 @@ project(':' + settings.modname) {
         maxFuzz 3
     }
     dependencies {
+        compileOnly('net.minecraftforge:forgespi:0.13.0') { transitive = false }
         // Add extra dependencies here
     }
 
@@ -357,6 +363,12 @@ if (rootProject.file('conf/patches/').exists()) {
     project(':mcp') {
         FixMcpConfigTask.register(project)
         fixMcpConfig.additionalDir(rootProject.file('conf/patches/'), 'patches/' + settings.pipeline + '/')
+    }
+}
+if (rootProject.file('conf/inject/').exists()) {
+    project(':mcp') {
+        FixMcpConfigTask.register(project)
+        fixMcpConfig.additionalDir(rootProject.file('conf/inject/'), 'config/inject/')
     }
 }
 
