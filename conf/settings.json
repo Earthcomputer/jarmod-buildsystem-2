@@ -8,5 +8,7 @@
 	"clientmain": "mcp.client.Start",
 	"servermain": "net.minecraft.server.MinecraftServer",
 	"reformat": true,
-	"customsrg": null
+	"customsrg": null,
+	"nopatches": false,
+	"customconstructors": null
 }

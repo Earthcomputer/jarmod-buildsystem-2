@@ -355,6 +355,29 @@ if (settings.customsrg != null) {
                 return istream
             }
         }
+        if (settings.customconstructors != null) {
+            fixMcpConfig.configAction { cfg ->
+                cfg.data.constructors = 'config/' + settings.customconstructors
+            }
+            fixMcpConfig.filterAction {
+                if (filename == 'config/constructors.txt') {
+                    return new FileInputStream(rootProject.file('conf/' + settings.customconstructors))
+                } else {
+                    return istream
+                }
+            }
+        }
+    }
+} else if (settings.nopatches) {
+    project(':mcp') {
+        FixMcpConfigTask.register(project)
+        fixMcpConfig.filterAction {
+            if (filename.startsWith('patches/') && !newFile) {
+                return null
+            } else {
+                return istream
+            }
+        }
     }
 }
 
