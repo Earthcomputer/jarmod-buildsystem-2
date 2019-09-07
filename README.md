@@ -54,6 +54,7 @@ From outside Eclipse, the file structure looks a little different. However, you 
 - `customsrg` The custom tsrg file inside the `conf/` folder, to override the one in the MCPConfig distribution, used to deobfuscate even newer Minecraft versions.
 - `nopatches` If true, don't apply MCP patches to fix recompile errors.
 - `customconstructors` The custom `constructors.txt` file in the `conf/` folder, to override the one in the MCPConfig distribution, used to deobfuscate even newer Minecraft versions.
+- `fernflower` The custom fernflower package to use to decompile.
 
 ## A word of warning
 1.13 modding is still in its infancy, and there are already known bugs that occur in the decompiled code which do not occur in vanilla. If you care about maintaining vanilla behaviour, then whenever making a change which may modify a certain vanilla class, make sure to weigh up the benefit of modifying said class against the risk that there might be a decompile bug in the class. This situation is constantly improving as 1.13 modding matures, but for now you can at least minimize the effect by distributing as few modified classes as possible.

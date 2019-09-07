@@ -386,7 +386,7 @@ if (settings.customsrg != null) {
 if (settings.fernflower != null) {
     project(':mcp') {
         FixMcpConfigTask.register(project)
-        fixMcpConfigTask.configAction { cfg ->
+        fixMcpConfig.configAction { cfg ->
             cfg.functions.decompile.version = settings.fernflower
         }
     }
