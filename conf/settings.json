@@ -10,5 +10,6 @@
 	"reformat": true,
 	"customsrg": null,
 	"nopatches": false,
-	"customconstructors": null
+	"customconstructors": null,
+	"fernflower": null
 }

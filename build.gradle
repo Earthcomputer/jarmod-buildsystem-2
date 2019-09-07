@@ -361,6 +361,7 @@ if (settings.customsrg != null) {
             }
             fixMcpConfig.filterAction {
                 if (filename == 'config/constructors.txt') {
+                    filename = 'config/' + settings.customconstructors
                     return new FileInputStream(rootProject.file('conf/' + settings.customconstructors))
                 } else {
                     return istream
@@ -377,6 +378,16 @@ if (settings.customsrg != null) {
             } else {
                 return istream
             }
+        }
+    }
+}
+
+// Custom Fernflower
+if (settings.fernflower != null) {
+    project(':mcp') {
+        FixMcpConfigTask.register(project)
+        fixMcpConfigTask.configAction { cfg ->
+            cfg.functions.decompile.version = settings.fernflower
         }
     }
 }
