@@ -147,9 +147,9 @@ project(':' + settings.modname) {
         compileOnly('net.minecraftforge:forgespi:2.0.+') { transitive = false }
         // Add extra dependencies here
     }
-	
-	tasks.eclipse.dependsOn('genEclipseRuns')
-	
+    
+    tasks.eclipse.dependsOn('genEclipseRuns')
+    
     task runclient(type: JavaExec, dependsOn: [":" + settings.modname + ":downloadAssets", ":" + settings.modname + ":extractNatives"]) {
         doFirst {
             mkdir "$rootDir/runclient"
