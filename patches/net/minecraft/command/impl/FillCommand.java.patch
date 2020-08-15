@@ -1,15 +1,13 @@
 --- a/net/minecraft/command/impl/FillCommand.java
 +++ b/net/minecraft/command/impl/FillCommand.java
-@@ -26,6 +26,8 @@
- import net.minecraft.util.text.TranslationTextComponent;
- import net.minecraft.world.ServerWorld;
+@@ -1,5 +1,6 @@
+ package net.minecraft.command.impl;
  
 +import com.example.mod.FillLimitCommand;
-+
- public class FillCommand
- {
-     private static final Dynamic2CommandExceptionType TOO_BIG_EXCEPTION = new Dynamic2CommandExceptionType((p_208897_0_, p_208897_1_) ->
-@@ -70,9 +72,9 @@
+ import com.google.common.collect.Lists;
+ import com.mojang.brigadier.CommandDispatcher;
+ import com.mojang.brigadier.exceptions.CommandSyntaxException;
+@@ -70,9 +71,9 @@
      {
          int i = area.getXSize() * area.getYSize() * area.getZSize();
  
