@@ -88,7 +88,7 @@ project(':clean') {
         }
         classpath sourceSets.main.runtimeClasspath
         args = ['--accessToken', '0', '--version', '1.16.2']
-        main settings.servermain
+        main settings.clientmain
         workingDir 'runclient'
     }
 }
