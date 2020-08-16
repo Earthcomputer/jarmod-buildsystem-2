@@ -5,7 +5,7 @@
      private String func_230149_ax_()
      {
 -        StringBuilder stringbuilder = new StringBuilder("Minecraft");
-+    	// example client-side-only modification
++        // example client-side-only modification
 +        StringBuilder stringbuilder = new StringBuilder("ExampleMod");
  
          if (this.func_230151_c_())
