@@ -9,12 +9,12 @@
  public class Commands
  {
      private static final Logger LOGGER = LogManager.getLogger();
-@@ -192,6 +194,8 @@
-         {
+@@ -193,6 +195,8 @@
              PublishCommand.register(this.dispatcher);
          }
-+        
-+        FillLimitCommand.register(this.dispatcher);
  
++        FillLimitCommand.register(this.dispatcher);
++
          this.dispatcher.findAmbiguities((p_201302_1_, p_201302_2_, p_201302_3_, p_201302_4_) ->
          {
+             LOGGER.warn("Ambiguity between arguments {} and {} with inputs: {}", this.dispatcher.getPath(p_201302_2_), this.dispatcher.getPath(p_201302_3_), p_201302_4_);
