@@ -5,7 +5,7 @@
      private String getWindowTitle()
      {
 -        StringBuilder stringbuilder = new StringBuilder("Minecraft");
-+    	// example client-side-only modification
++        // example client-side-only modification
 +        StringBuilder stringbuilder = new StringBuilder("ExampleMod");
  
          if (this.isModdedClient())
