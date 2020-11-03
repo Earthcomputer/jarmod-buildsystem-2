@@ -1,12 +1,12 @@
 --- a/net/minecraft/client/Minecraft.java
 +++ b/net/minecraft/client/Minecraft.java
-@@ -529,7 +529,8 @@
+@@ -543,7 +543,8 @@
  
-     private String func_230149_ax_()
+     private String getWindowTitle()
      {
 -        StringBuilder stringbuilder = new StringBuilder("Minecraft");
-+        // example client-side-only modification
++    	// example client-side-only modification
 +        StringBuilder stringbuilder = new StringBuilder("ExampleMod");
  
-         if (this.func_230151_c_())
+         if (this.isModdedClient())
          {
