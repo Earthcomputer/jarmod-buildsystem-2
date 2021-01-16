@@ -2,7 +2,7 @@
 Buildsystem built on top of ForgeGradle 3.0 for making JAR mods in Minecraft 1.13+
 
 ## Requirements
-- You need to have at least JDK8 update 92 for recompilation to work, due to a bug in earlier versions of `javac`. You also cannot use JDK9 or JDK10 yet.
+- You need to have at least JDK8 update 92 for recompilation to work, due to a bug in earlier versions of `javac`.
 - You need to have `git` installed.
 - Eclipse Oxygen.3 or later, due to [this Eclipse bug](https://bugs.eclipse.org/bugs/show_bug.cgi?id=526911).
 - Or Intellij
