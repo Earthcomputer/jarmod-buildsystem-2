@@ -8,6 +8,12 @@ buildscript {
             name 'maven_central'
             url 'https://repo.maven.apache.org/maven2/'
         }
+		maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url 'https://maven.fabricmc.net/'
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.190'
@@ -16,18 +22,32 @@ buildscript {
         classpath 'com.github.abrarsyed.jastyle:jAstyle:1.3'
         classpath 'com.google.code.gson:gson:2.8.0' // because groovy JsonGenerator doesn't exist wtf
         classpath 'commons-io:commons-io:2.6'
-        //classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3" // For debug purposes
+        classpath 'org.cadixdev:lorenz:0.5.5'
+        classpath 'net.fabricmc:lorenz-tiny:2.0.0+build.2'
+        classpath 'org.cadixdev:lorenz-io-proguard:0.5.5'
+        classpath 'org.cadixdev:mercury:0.1.0-rc1'
+        classpath 'net.fabricmc:tiny-mappings-parser:0.2.2.14'
+        classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3" // For debug purposes
     }
 }
 
-import com.github.abrarsyed.jastyle.ASFormatter;
+import com.github.abrarsyed.jastyle.ASFormatter
 import com.github.abrarsyed.jastyle.OptParser
-import com.google.common.collect.Maps;
+import com.google.common.collect.Maps
 import com.google.gson.GsonBuilder
 import groovy.json.JsonSlurper
+import java.nio.charset.StandardCharsets
 import java.util.zip.*
+import net.fabricmc.lorenztiny.TinyMappingFormat
+import net.fabricmc.lorenztiny.TinyMappingsReader
+import net.fabricmc.mapping.tree.TinyMappingFactory
+import net.minecraftforge.gradle.common.task.DownloadMavenArtifact
 import org.apache.commons.io.IOUtils
 import org.apache.commons.io.input.NullInputStream
+import org.cadixdev.lorenz.MappingSet
+import org.cadixdev.lorenz.io.srg.tsrg.TSrgMappingFormat
+import org.cadixdev.mercury.Mercury
+import org.cadixdev.mercury.remapper.MercuryRemapper
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.*
 import org.gradle.plugins.ide.eclipse.model.SourceFolder
@@ -38,7 +58,7 @@ import org.gradle.plugins.ide.eclipse.model.SourceFolder
 def settings = new JsonSlurper().parseText(file('conf/settings.json').text)
 
 apply plugin: 'eclipse'
-//apply plugin: "com.dorongold.task-tree" // For debug purposes
+apply plugin: "com.dorongold.task-tree" // For debug purposes
 
 group = 'com.example'
 version = settings.modversion
@@ -122,12 +142,16 @@ project(':' + settings.modname) {
             name 'maven_central'
             url 'https://repo.maven.apache.org/maven2/'
         }
+        maven {
+            name 'fabric'
+            url 'https://maven.fabricmc.net/'
+        }
     }
     patcher {
         parent = project(':clean')
         patches = file("$rootDir/patches")
         patchedSrc = file('src/main/java')
-        srgPatches = false
+        srgPatches = settings.yarnmappings != null || settings.mojangmappings != null
         getRuns().each { run ->
             if (run.getName().equals(settings.modname + '_client')) {
                 run.setMain(settings.clientmain)
@@ -299,6 +323,87 @@ class CheckModifiedHelper {
     }
 }
 
+// ===== REMAPPING ===== //
+
+def loadYarnMappings(File file, String from, String to) {
+    def tinyZip = new ZipFile(file)
+    def tinyTree = TinyMappingFactory.loadWithDetection(new BufferedReader(new InputStreamReader(tinyZip.getInputStream(tinyZip.getEntry('mappings/mappings.tiny')), StandardCharsets.UTF_8)))
+    def mappings = MappingSet.create()
+    new TinyMappingsReader(tinyTree, from, to).read(mappings)
+    return mappings
+}
+
+if (settings.yarnmappings != null || settings.mojangmappings != null) {
+    project(':' + settings.modname) {
+        afterEvaluate {
+            def applyCleanPatches = project(':clean').applyPatches
+            def setupMCPTask = project(':mcp').setupMCP
+
+            task downloadCustomMappings(type: DownloadMavenArtifact) {
+                if (settings.yarnmappings != null) {
+                    artifact = 'net.fabricmc:yarn:' + settings.mcversion + '+build.' + settings.yarnmappings + ':v2'
+                } else {
+                    throw new UnsupportedOperationException('mojmap not supported yet')
+                }
+            }
+
+            if (settings.yarnmappings != null) {
+                task downloadIntermediaryMappings(type: DownloadMavenArtifact) {
+                    artifact = 'net.fabricmc:intermediary:' + settings.mcversion + ':v2'
+                }
+            }
+
+            def unzipForMercuryOutput = file('build/unzipForMercury/output')
+            task unzipForMercury(type: Copy) {
+                dependsOn applyCleanPatches
+                from zipTree(applyCleanPatches.output)
+                into unzipForMercuryOutput
+            }
+
+            def remapOutput = file('build/remapMercury/output')
+            task remapMercury() {
+                inputs.file setupMCPTask.config
+                inputs.file downloadCustomMappings.output
+                inputs.dir unzipForMercuryOutput
+                outputs.dir remapOutput
+                dependsOn unzipForMercury, setupMCPTask, downloadCustomMappings
+                if (settings.yarnmappings != null) {
+                    inputs.file downloadIntermediaryMappings.output
+                    dependsOn downloadIntermediaryMappings
+                }
+                doLast {
+                    def srgZip = new ZipFile(setupMCPTask.config)
+                    def srgMappings = MappingSet.create()
+                    new TSrgMappingFormat().createReader(srgZip.getInputStream(srgZip.getEntry('config/joined.tsrg'))).read(srgMappings)
+                    def customMappings
+                    if (settings.yarnmappings != null) {
+                        customMappings = loadYarnMappings(downloadIntermediaryMappings.output, 'official', 'intermediary').merge(loadYarnMappings(downloadCustomMappings.output, 'intermediary', 'named'))
+                    } else {
+                        throw new UnsupportedOperationException('mojmap not yet supported')
+                    }
+                    def combinedMappings = srgMappings.reverse().merge(customMappings)
+                    def mercury = new Mercury()
+                    configurations.compileClasspath.files.each {
+                        mercury.classPath.add it.toPath()
+                    }
+                    mercury.processors.add MercuryRemapper.create(combinedMappings)
+                    mercury.rewrite(unzipForMercuryOutput.toPath(), remapOutput.toPath())
+                }
+            }
+
+            def zipForMercuryOutput = file('build/zipFromMercury/output.zip')
+            task zipFromMercury(type: Zip) {
+                dependsOn remapMercury
+                from remapOutput
+                into zipForMercuryOutput
+            }
+            
+            applyPatches.dependsOn zipFromMercury
+            applyPatches.clean = zipForMercuryOutput
+        }
+    }
+}
+
 // ===== FIXES ===== //
 
 // Fix recompilation requiring extractSrg output
@@ -348,7 +453,7 @@ class FixMcpConfigTask extends DefaultTask {
                 inputs.file proj.downloadConfig.output
                 outputs.file 'build/mcp_config.zip'
             }
-            proj.loadConfig.dependsOn proj.fixMcpConfig
+            proj.setupMCP.dependsOn proj.fixMcpConfig
         }
     }
 }

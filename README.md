@@ -46,6 +46,8 @@ From outside Eclipse, the file structure looks a little different. However, you 
 - `modversion` the version your mod is on.
 - `mcpconfig` the MCPConfig version you are using.
 - `mappings` the MCP mappings you are using.
+- `yarnmappings` the yarn mappings to remap to (build number only).
+- `mojangmappings` whether to use official mojang mappings (true/false)
 - `mcversion` the Minecraft version.
 - `pipeline`, either `joined`, `client` or `server` - whether your mod is to be a client-side-only or server-side-only mod, or to be both and share the same codebase.
 - `clientmain` the main class on the client.
